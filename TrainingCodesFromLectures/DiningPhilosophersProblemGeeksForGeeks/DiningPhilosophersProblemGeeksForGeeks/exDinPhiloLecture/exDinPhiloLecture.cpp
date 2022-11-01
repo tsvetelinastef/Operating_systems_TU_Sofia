@@ -1,4 +1,4 @@
-﻿#include <iostream>
+ //#include <iostream>
 
 /*
 Dining Philosophers
@@ -65,4 +65,63 @@ void main()
 // that was first Solution to the Dinning Philosophers Problem
 
 // escaping of deadlock
+// program diningphilosophers
+semaphore fork[5] = { 1 };
+semaphore room = { 4 };
+int i;
+void philosopher(int i)
+{
+	while (true) {
+		think();
+		wait(room);
+		wait(fork[i]);
+		wait(fork[(i + 1) mod 5]);
+		eat();
+		signal(fork[(i + 1) mod 5]);
+		signal(fork[i]);
+		signal(room);
+	}
+}
+
+void main()
+{
+	parbegin(philosopher(0), philosopher(1),
+		philosopher(2), philosopher(3), philosopher(4));
+
+}
+
+// решение с монитори
+monitor dining_controller;
+cond ForkReady[5];  // condition variable for synchronization
+boolean fork[5] = { true }; // availability status of each fork
+
+void get_forks(int pid) // pid is the philosopher id number
+{
+	int left = pid;
+	int right = (++pid) % 5;
+	// grant the left fork
+	if (!fork(left))
+		cwait(ForkReady[left]); // queue on condition variable 
+	fork(left) = false;
+	// grant the right fork
+	if (!fork(right))
+		cwait(ForkReady(right)); // queue on condition variable
+	fork(left) = false;
+}
+
+void release_forks(int pid)
+{
+	int left = pid;
+	int right = (++pid) % 5;
+	// release the left fork
+	if (empty(ForkReady[left])) // no one is waiting for this fork
+		fork(left) = true;
+	else
+		csignal(ForkReady[left]);
+	// release the right fork
+	if (empty(ForkReady[right])) // no one is waiting for this fork
+		fork(right) = true;
+	else
+		csignal(ForkReady[right]);
+}
 
